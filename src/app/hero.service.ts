@@ -6,6 +6,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Hero } from './hero';
 import { MessageService } from './message.service';
 
+const httpOptions = {
+    headers: new HttpHeaders({'Content-Type': 'application/json'})
+  };
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,10 +21,6 @@ export class HeroService {
     private messageService: MessageService,
     private http: HttpClient
   ) { }
-  
-  private log(message: string) {
-    this.messageService.add(`HeroService: ${message}`);
-  }
   
   getHeroes(): Observable<Hero[]> {
     return this.http.get<Hero[]>(this.heroesURL)
@@ -37,6 +37,36 @@ export class HeroService {
         tap(_ => this.log(`Heroe with id=${id} fetched`)),
         catchError(this.handleError<Hero>(`getHero id=${id}`))
       );
+  }
+  
+  addHero(hero: Hero): Observable<Hero> {
+    return this.http.post<Hero>(this.heroesURL, hero, httpOptions)
+      .pipe(
+          tap((newHero: Hero) => this.log(`Added heroe with id=${newHero.id}`)),
+          catchError(this.handleError<Hero>(`addHero`))
+        );
+  }
+  
+  updateHero(hero: Hero): Observable<any> {
+    return this.http.put(this.heroesURL, hero, httpOptions)
+      .pipe(
+          tap(_ => this.log(`Updated heroe with id=${hero.id}`)),
+          catchError(this.handleError<any>(`updateHero`))
+        );
+  }
+  
+  deleteHero(hero: Hero | number): Observable<Hero> {
+    const id = typeof hero === 'number' ? hero : hero.id;
+    const url = `${this.heroesURL}/${id}`;
+    return this.http.delete<Hero>(url, httpOptions)
+      .pipe(
+            tap(_ => this.log(`Deleted heroe with id=${id}`)),
+            catchError(this.handleError<Hero>(`deleteHero`))
+          );
+  }
+  
+  private log(message: string) {
+    this.messageService.add(`HeroService: ${message}`);
   }
   
    /**
